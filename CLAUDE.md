@@ -70,7 +70,15 @@ npx drizzle-kit studio   # DB 브라우저 GUI
 ### 테스트
 
 ```bash
-# 단위/통합 테스트 (frontend/ 또는 backend/ 에서)
+# 백엔드 (backend/ 에서, package.json 스크립트)
+npm test                 # vitest run (tests/**/*.test.ts)
+npm run test:watch       # watch 모드
+npm run test:coverage    # v8 커버리지 (coverage/)
+npm run typecheck        # tsc --noEmit
+npm test -- tests/tasks.test.ts       # 단일 파일
+npm test -- -t "테스트 이름"           # 이름으로 단일 테스트
+
+# 단위/통합 테스트 - 직접 호출 (frontend/ 또는 backend/ 에서)
 npx vitest               # watch 모드
 npx vitest run           # 한 번만 실행 (CI용)
 npx vitest run path/to/file.test.ts   # 단일 파일
@@ -85,3 +93,10 @@ npx playwright test --ui                # UI 모드로 디버깅
 ```
 
 실제 코드가 추가되면 이 섹션을 실제 스크립트에 맞게 갱신하고, 프론트엔드·백엔드·E2E가 어떻게 연결되는지(API 기본 URL, 포트, Playwright가 서비스를 어떻게 띄우는지 등)도 짧게 적어 주세요.
+
+## 코드 컨벤션
+
+- Typescript strict mode
+- 함수형 컴포넌트 + Hooks
+- 에러는 Zod 스키마로 검증
+- 한글 주석 허용
