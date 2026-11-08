@@ -62,9 +62,9 @@ npx vite preview         # 빌드 결과 미리보기
 ```bash
 npm install
 # 개발 서버: 런타임 미정 (Node: npx tsx watch src/index.ts / Bun: bun --hot src/index.ts)
-npx drizzle-kit generate # 스키마 변경으로부터 마이그레이션 파일 생성
-npx drizzle-kit migrate  # 마이그레이션을 SQLite DB에 적용
-npx drizzle-kit studio   # DB 브라우저 GUI
+npm run db:generate      # schema.ts 변경 후 drizzle/ 에 마이그레이션 SQL 생성 (반드시 커밋)
+npm run db:studio        # DB 브라우저 GUI
+# 마이그레이션 적용은 별도 명령이 없다: src/db/index.ts가 import될 때 자동으로 migrate() 실행
 ```
 
 ### 테스트
@@ -93,6 +93,15 @@ npx playwright test --ui                # UI 모드로 디버깅
 ```
 
 실제 코드가 추가되면 이 섹션을 실제 스크립트에 맞게 갱신하고, 프론트엔드·백엔드·E2E가 어떻게 연결되는지(API 기본 URL, 포트, Playwright가 서비스를 어떻게 띄우는지 등)도 짧게 적어 주세요.
+
+## 백엔드 구조
+
+- `src/app.ts` — Hono 앱 조립(라우트 마운트, 404/에러 핸들러). 테스트는 서버를 띄우지 않고 `app.request()`로 직접 호출한다.
+- `src/routes/*.ts` — 기능별 라우터(`/api/auth` 등). 입력은 `validateJson(zod스키마)` 미들웨어로 검증하고 `c.req.valid("json")`으로 꺼낸다.
+- `src/middleware/auth.ts` — `requireAuth`: `Authorization: Bearer <JWT>` 검증 후 `c.get("userId")` 제공. 보호할 라우터는 `new Hono<AuthEnv>()` + `.use("*", requireAuth)`. 사용자 소유 리소스는 항상 `userId` 조건을 함께 걸어 조회하고, 남의 리소스는 403이 아닌 404로 응답한다.
+- `src/db/` — Drizzle 스키마와 연결. `DATABASE_URL`이 없으면 Vitest 실행 중엔 `:memory:`, 그 외엔 `sqlite.db`를 쓴다. 테스트 파일마다 빈 메모리 DB에서 시작한다.
+- `src/lib/errors.ts` — **모든 에러 응답은 `{ "error": string, "details"?: unknown }` 포맷**. 직접 `c.json({...}, 4xx)`를 만들지 말고 `errorResponse()`를 쓰거나 `HTTPException`을 던진다(`app.onError`가 변환).
+- 인증: bcryptjs(10 rounds)로 해싱, `hono/jwt`의 HS256 토큰(`sub`=userId, 7일 만료). 키는 `JWT_SECRET`(운영에서 미설정 시 시작 실패).
 
 ## 코드 컨벤션
 
