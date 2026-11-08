@@ -10,7 +10,7 @@ test.describe('홈 페이지', () => {
     await expect(page.getByLabel('이메일')).toBeVisible()
 
     await page.getByRole('link', { name: '회원가입', exact: true }).click()
-    await expect(page).toHaveURL('/signup')
+    await expect(page).toHaveURL('/register')
     await expect(page.getByLabel('비밀번호 확인')).toBeVisible()
   })
 

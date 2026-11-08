@@ -30,7 +30,20 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // 1단계: 회원가입 흐름. 여기서 test@example.com 계정이 만들어진다.
+    {
+      name: 'auth',
+      testMatch: '**/auth.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // 2단계: 나머지 테스트. tasks.spec.ts는 위에서 만든 test@example.com으로 로그인하므로
+    // auth 프로젝트가 끝난 뒤에 실행한다(파일 하나만 실행해도 auth가 먼저 돈다).
+    {
+      name: 'chromium',
+      testIgnore: '**/auth.spec.ts',
+      dependencies: ['auth'],
+      use: { ...devices['Desktop Chrome'] },
+    },
     // 필요하면 주석을 풀어 다른 브라우저도 검증한다.
     // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     // { name: 'webkit', use: { ...devices['Desktop Safari'] } },

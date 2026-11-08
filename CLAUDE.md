@@ -93,6 +93,8 @@ npx vitest run -t "테스트 이름"        # 이름으로 단일 테스트
 npm install && npx playwright install chromium   # 최초 1회
 npm run test:e2e                        # 전체 (전용 포트로 백엔드 :3001(메모리 DB) + 프론트 :5174 자동 실행)
 npx playwright test e2e/home.spec.ts    # 단일 파일
+# 실행 순서: auth 프로젝트(auth.spec.ts, test@example.com 가입) → chromium 프로젝트(나머지, tasks.spec.ts는 그 계정으로 로그인)
+# 그래서 파일 하나만 실행해도 auth.spec.ts가 먼저 돈다. 독립 실행은 --no-deps
 npx playwright test -g "테스트 이름"     # 이름으로 단일 테스트
 npm run test:e2e:ui                     # UI 모드로 디버깅
 npm run test:e2e:report                 # 마지막 HTML 리포트 열기
@@ -112,13 +114,13 @@ npm run test:e2e:report                 # 마지막 HTML 리포트 열기
 ## 프론트엔드 구조
 
 - 라우팅: `react-router`(v8). `src/App.tsx`가 `<Routes>`를 정의하고, `BrowserRouter`는 `src/main.tsx`에서 감싼다. 테스트에서는 `<MemoryRouter initialEntries={["/경로"]}><App /></MemoryRouter>`로 렌더링한다.
-- `src/pages/*Page.tsx` — 라우트 단위 페이지(`/`, `/login`, `/signup`, `*`=404). 페이지가 상태·API 호출을 담당하고, 폼 UI는 `src/components`에 둔다.
+- `src/pages/*Page.tsx` — 라우트 단위 페이지(`/`, `/login`, `/register`, `/dashboard`, `/logout`, `*`=404). 페이지가 상태·API 호출을 담당하고, 폼 UI는 `src/components`에 둔다.
 - 인증/API: `src/lib/api.ts`가 유일한 fetch 지점(`/api` 접두사, Bearer 토큰, 에러 응답을 `ApiError`로 변환, 화면 문구는 `toErrorMessage(err, {상태코드: 문구})`). 토큰은 `src/auth/AuthProvider.tsx`가 localStorage(`taskflow.token`)에 저장하고, 컴포넌트는 `useAuth()`로 접근한다. 보호 페이지는 `<RequireAuth>`로 감싼다. 로그아웃은 `/logout` 라우트로 이동해서 처리한다(보호 영역 안에서 바로 토큰을 지우면 RequireAuth가 먼저 /login으로 보내기 때문).
 - 개발 시 Vite가 `/api`를 `API_PROXY_TARGET`(기본 `http://localhost:3000`)으로 프록시한다. 프론트와 백엔드를 각각 `npm run dev`로 띄운다.
 - `src/lib/validation.ts` — 이메일/비밀번호 검증 규칙(백엔드 Zod 스키마와 같은 기준). 폼마다 규칙을 따로 만들지 않는다.
 - `src/components/*.tsx` — 기능 컴포넌트(default export). 데이터 요청은 하지 않고 props 콜백(`onLogin` 등)으로 부모에 위임한다.
-- `src/components/ui/` — 공통 UI. **폼 입력은 `FormField`를 사용**한다(`useId`로 label `htmlFor`↔input `id` 자동 연결, 에러 시 `aria-invalid` + `aria-describedby` + 빨간 테두리). 폼 전체/서버 에러는 `FormAlert`(`role="alert"`)로 표시한다. 에러 표시를 컴포넌트마다 새로 만들지 않는다.
-- `src/types/task.ts` — 백엔드 `tasks` 스키마와 맞춘 `Task` 타입(id는 UUID 문자열, status는 `"pending" | "completed"`). 백엔드 스키마/상태 값을 바꾸면 이 파일도 함께 바꾼다.
+- `src/components/ui/` — 공통 UI. **폼 입력은 `FormField`를 사용**한다(`useId`로 label `htmlFor`↔input `id` 자동 연결, 에러 시 `aria-invalid` + `aria-describedby` + 빨간 테두리). 여러 줄 입력은 `TextAreaField`(같은 에러 표시). 폼 전체/서버 에러는 `FormAlert`(`role="alert"`, `.error-message`)로 표시한다. 모달은 `Modal`, 삭제 등 확인은 `ConfirmDialog`(`role="alertdialog"`)를 쓴다. 에러 표시를 컴포넌트마다 새로 만들지 않는다.
+- `src/types/task.ts` — 백엔드 `tasks` 스키마와 맞춘 `Task` 타입(id는 UUID 문자열, status는 `"pending" | "in_progress" | "completed"`, 화면 라벨은 `STATUS_LABEL`: 대기/진행중/완료). 백엔드 스키마/상태 값을 바꾸면 이 파일도 함께 바꾼다.
 - 스타일은 Tailwind v4(`@tailwindcss/vite`, `src/index.css`의 `@import "tailwindcss"`)만 사용한다. 레이어 밖 전역 CSS는 유틸리티를 덮어쓰므로 추가하지 않는다.
 - `npm run build`는 앱 코드만 타입 검사한다. 테스트 포함 전체 타입 검사는 `npm run typecheck`(`tsc -b`).
 

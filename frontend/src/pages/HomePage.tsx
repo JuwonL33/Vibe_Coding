@@ -18,7 +18,7 @@ export default function HomePage() {
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Link
-            to="/signup"
+            to="/register"
             className="rounded-lg bg-indigo-600 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             회원가입

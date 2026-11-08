@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../auth/useAuth'
-import Signup from '../components/Signup'
+import Register from '../components/Register'
 import { toErrorMessage } from '../lib/api'
 import { AuthPageFooter } from './AuthPageFooter'
 
-export default function SignupPage() {
+export default function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState<string>()
@@ -13,8 +13,8 @@ export default function SignupPage() {
 
   return (
     <div className="flex flex-col gap-6 py-12">
-      <Signup
-        onSignup={async (data) => {
+      <Register
+        onRegister={async (data) => {
           setError(undefined)
           setIsLoading(true)
           try {

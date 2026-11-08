@@ -28,7 +28,7 @@ export default function LoginPage() {
         error={error}
         isLoading={isLoading}
       />
-      <AuthPageFooter question="아직 계정이 없으신가요?" to="/signup" label="회원가입" />
+      <AuthPageFooter question="아직 계정이 없으신가요?" to="/register" label="회원가입" />
     </div>
   )
 }

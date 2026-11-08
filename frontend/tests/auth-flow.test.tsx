@@ -43,7 +43,7 @@ describe("회원가입 → 대시보드", () => {
       "POST /api/auth/register": () => ({ status: 201, body: { token: TOKEN, user } }),
       "GET /api/tasks": () => ({ status: 200, body: [] }),
     });
-    renderAt("/signup");
+    renderAt("/register");
     fireEvent.change(screen.getByLabelText("이메일"), { target: { value: "new@example.com" } });
     fireEvent.change(screen.getByLabelText("비밀번호"), { target: { value: "password123" } });
     fireEvent.change(screen.getByLabelText("비밀번호 확인"), { target: { value: "password123" } });
@@ -62,7 +62,7 @@ describe("회원가입 → 대시보드", () => {
     mockApi({
       "POST /api/auth/register": () => ({ status: 409, body: { error: "Email already registered" } }),
     });
-    renderAt("/signup");
+    renderAt("/register");
     fireEvent.change(screen.getByLabelText("이메일"), { target: { value: "new@example.com" } });
     fireEvent.change(screen.getByLabelText("비밀번호"), { target: { value: "password123" } });
     fireEvent.change(screen.getByLabelText("비밀번호 확인"), { target: { value: "password123" } });
@@ -133,9 +133,9 @@ describe("대시보드", () => {
     expect(new Headers(init?.headers).get("Authorization")).toBe(`Bearer ${TOKEN}`);
   });
 
-  test("새 태스크를 추가하면 목록에 나타난다.", async () => {
+  test("새 태스크 추가 버튼으로 모달을 열어 태스크를 만들면 목록에 나타난다.", async () => {
     localStorage.setItem("taskflow.token", TOKEN);
-    mockApi({
+    const fetchMock = mockApi({
       "GET /api/tasks": () => ({ status: 200, body: [] }),
       "POST /api/tasks": (init) => ({
         status: 201,
@@ -143,36 +143,67 @@ describe("대시보드", () => {
       }),
     });
     renderAt("/dashboard");
+    // 목록을 불러오는 동안에는 추가 버튼이 비활성화된다.
+    expect(screen.getByRole("button", { name: "새 태스크 추가" })).toBeDisabled();
     await screen.findByText("태스크가 없습니다.");
 
-    fireEvent.change(screen.getByLabelText("새 태스크"), { target: { value: "장보기" } });
+    fireEvent.click(screen.getByRole("button", { name: "새 태스크 추가" }));
+    const dialog = screen.getByRole("dialog", { name: "새 태스크" });
+    expect(dialog).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("제목"), { target: { value: "장보기" } });
+    fireEvent.change(screen.getByLabelText("설명"), { target: { value: "우유" } });
     fireEvent.click(screen.getByRole("button", { name: "추가" }));
 
     expect(await screen.findByText("장보기")).toBeInTheDocument();
-    expect(screen.getByLabelText("새 태스크")).toHaveValue("");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
+    expect(JSON.parse(String(postCall?.[1]?.body))).toEqual({ title: "장보기", description: "우유" });
   });
 
-  test("상태 변경과 삭제가 API 결과대로 반영된다.", async () => {
+  test("상태 메뉴에서 진행중을 고르면 API 결과대로 반영된다.", async () => {
     localStorage.setItem("taskflow.token", TOKEN);
     mockApi({
       "GET /api/tasks": () => ({
         status: 200,
         body: [{ id: "t1", title: "운동", description: null, status: "pending" }],
       }),
-      "PATCH /api/tasks/t1": () => ({
+      "PATCH /api/tasks/t1": (init) => ({
         status: 200,
-        body: { id: "t1", title: "운동", description: null, status: "completed" },
+        body: { id: "t1", title: "운동", description: null, ...JSON.parse(String(init.body)) },
+      }),
+    });
+    renderAt("/dashboard");
+    await screen.findByText("운동");
+
+    fireEvent.click(screen.getByRole("button", { name: "상태 변경" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "진행중" }));
+    expect(await screen.findByTestId("status-in_progress")).toHaveTextContent("진행중");
+  });
+
+  test("삭제는 확인 다이얼로그에서 확인해야 실행되고, 취소하면 남아 있다.", async () => {
+    localStorage.setItem("taskflow.token", TOKEN);
+    const fetchMock = mockApi({
+      "GET /api/tasks": () => ({
+        status: 200,
+        body: [{ id: "t1", title: "운동", description: null, status: "pending" }],
       }),
       "DELETE /api/tasks/t1": () => ({ status: 204 }),
     });
     renderAt("/dashboard");
     await screen.findByText("운동");
 
-    fireEvent.click(screen.getByRole("button", { name: "상태 변경" }));
-    expect(await screen.findByText("completed")).toBeInTheDocument();
-
+    // 취소
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("운동");
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
+
+    // 확인
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
     await waitFor(() => expect(screen.queryByText("운동")).not.toBeInTheDocument());
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   test("토큰이 만료(401)되면 로그아웃하고 로그인 페이지로 보낸다.", async () => {

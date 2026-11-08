@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-// 태스크 상태 값. 테스트에서 사용하는 "pending"(생성 시 기본값)과 "completed"(PATCH로 변경)
-export const taskStatuses = ["pending", "completed"] as const;
+// 태스크 상태 값: 대기(생성 시 기본값) → 진행중 → 완료
+export const taskStatuses = ["pending", "in_progress", "completed"] as const;
 export type TaskStatus = (typeof taskStatuses)[number];
 
 export const users = sqliteTable("users", {

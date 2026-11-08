@@ -15,7 +15,7 @@ describe("메인 홈 페이지", () => {
   test("서비스 이름과 회원가입/로그인 링크를 보여준다.", () => {
     renderAt("/");
     expect(screen.getByRole("heading", { level: 1, name: "TaskFlow" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/signup");
+    expect(screen.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/register");
     expect(screen.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
   });
 
@@ -37,12 +37,17 @@ describe("메인 홈 페이지", () => {
 describe("페이지 간 이동", () => {
   test("로그인 페이지에서 회원가입 페이지로 갈 수 있다.", () => {
     renderAt("/login");
-    expect(screen.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/signup");
+    expect(screen.getByRole("link", { name: "회원가입" })).toHaveAttribute("href", "/register");
   });
 
   test("회원가입 페이지에서 로그인 페이지로 갈 수 있다.", () => {
-    renderAt("/signup");
+    renderAt("/register");
     expect(screen.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
+  });
+
+  test("회원가입 페이지는 /register 하나로 통합되어 /signup 은 404다.", () => {
+    renderAt("/signup");
+    expect(screen.getByText("페이지를 찾을 수 없습니다.")).toBeInTheDocument();
   });
 
   test("없는 경로는 404 안내와 홈 링크를 보여준다.", () => {

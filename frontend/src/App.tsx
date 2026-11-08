@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from 'react-router'
+import { Link, Route, Routes } from 'react-router'
 import { AuthProvider } from './auth/AuthProvider'
 import { RequireAuth } from './auth/RequireAuth'
 import DashboardPage from './pages/DashboardPage'
@@ -6,7 +6,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import LogoutPage from './pages/LogoutPage'
 import NotFoundPage from './pages/NotFoundPage'
-import SignupPage from './pages/SignupPage'
+import RegisterPage from './pages/RegisterPage'
 
 // 라우터(BrowserRouter)는 main.tsx에서 감싼다. 테스트에서는 MemoryRouter로 감싸서 사용한다.
 export default function App() {
@@ -24,9 +24,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            {/* /register 는 /signup 의 별칭 */}
-            <Route path="/register" element={<Navigate to="/signup" replace />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route
               path="/dashboard"
               element={

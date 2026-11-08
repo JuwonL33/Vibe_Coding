@@ -3,19 +3,19 @@ import { FormAlert } from './ui/FormAlert'
 import { FormField } from './ui/FormField'
 import { compactErrors, validateEmail, validatePassword } from '../lib/validation'
 
-export type SignupData = {
+export type RegisterData = {
   email: string
   password: string
 }
 
-type SignupProps = {
-  onSignup: (data: SignupData) => void | Promise<void>
+type RegisterProps = {
+  onRegister: (data: RegisterData) => void | Promise<void>
   /** 서버에서 받은 에러 등 폼 전체 에러 메시지 */
   error?: string
   isLoading?: boolean
 }
 
-type Values = SignupData & { confirmPassword: string }
+type Values = RegisterData & { confirmPassword: string }
 type FieldErrors = Partial<Record<keyof Values, string>>
 
 function validate({ email, password, confirmPassword }: Values): FieldErrors {
@@ -30,7 +30,7 @@ function validate({ email, password, confirmPassword }: Values): FieldErrors {
   })
 }
 
-export default function Signup({ onSignup, error, isLoading = false }: SignupProps) {
+export default function Register({ onRegister, error, isLoading = false }: RegisterProps) {
   const [values, setValues] = useState<Values>({ email: '', password: '', confirmPassword: '' })
   const [errors, setErrors] = useState<FieldErrors>({})
 
@@ -45,7 +45,7 @@ export default function Signup({ onSignup, error, isLoading = false }: SignupPro
     const nextErrors = validate(trimmed)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
-    void onSignup({ email: trimmed.email, password: trimmed.password })
+    void onRegister({ email: trimmed.email, password: trimmed.password })
   }
 
   return (
