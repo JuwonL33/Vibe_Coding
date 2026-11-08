@@ -78,6 +78,10 @@ npm run typecheck        # tsc --noEmit
 npm test -- tests/tasks.test.ts       # 단일 파일
 npm test -- -t "테스트 이름"           # 이름으로 단일 테스트
 
+# 프론트엔드 (frontend/ 에서) — jsdom + Testing Library, 설정은 vitest.config.ts / tests/setup.ts
+npm test                 # vitest run (tests/**, src/** 의 *.test.ts(x))
+npm run test:watch       # watch 모드
+
 # 단위/통합 테스트 - 직접 호출 (frontend/ 또는 backend/ 에서)
 npx vitest               # watch 모드
 npx vitest run           # 한 번만 실행 (CI용)
