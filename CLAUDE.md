@@ -107,6 +107,17 @@ npx playwright test --ui                # UI 모드로 디버깅
 - `src/lib/errors.ts` — **모든 에러 응답은 `{ "error": string, "details"?: unknown }` 포맷**. 직접 `c.json({...}, 4xx)`를 만들지 말고 `errorResponse()`를 쓰거나 `HTTPException`을 던진다(`app.onError`가 변환).
 - 인증: bcryptjs(10 rounds)로 해싱, `hono/jwt`의 HS256 토큰(`sub`=userId, 7일 만료). 키는 `JWT_SECRET`(운영에서 미설정 시 시작 실패).
 
+## 프론트엔드 구조
+
+- 라우팅: `react-router`(v8). `src/App.tsx`가 `<Routes>`를 정의하고, `BrowserRouter`는 `src/main.tsx`에서 감싼다. 테스트에서는 `<MemoryRouter initialEntries={["/경로"]}><App /></MemoryRouter>`로 렌더링한다.
+- `src/pages/*Page.tsx` — 라우트 단위 페이지(`/`, `/login`, `/signup`, `*`=404). 페이지가 상태·API 호출을 담당하고, 폼 UI는 `src/components`에 둔다.
+- `src/lib/validation.ts` — 이메일/비밀번호 검증 규칙(백엔드 Zod 스키마와 같은 기준). 폼마다 규칙을 따로 만들지 않는다.
+- `src/components/*.tsx` — 기능 컴포넌트(default export). 데이터 요청은 하지 않고 props 콜백(`onLogin` 등)으로 부모에 위임한다.
+- `src/components/ui/` — 공통 UI. **폼 입력은 `FormField`를 사용**한다(`useId`로 label `htmlFor`↔input `id` 자동 연결, 에러 시 `aria-invalid` + `aria-describedby` + 빨간 테두리). 폼 전체/서버 에러는 `FormAlert`(`role="alert"`)로 표시한다. 에러 표시를 컴포넌트마다 새로 만들지 않는다.
+- `src/types/task.ts` — 백엔드 `tasks` 스키마와 맞춘 `Task` 타입(id는 UUID 문자열, status는 `"pending" | "completed"`). 백엔드 스키마/상태 값을 바꾸면 이 파일도 함께 바꾼다.
+- 스타일은 Tailwind v4(`@tailwindcss/vite`, `src/index.css`의 `@import "tailwindcss"`)만 사용한다. 레이어 밖 전역 CSS는 유틸리티를 덮어쓰므로 추가하지 않는다.
+- `npm run build`는 앱 코드만 타입 검사한다. 테스트 포함 전체 타입 검사는 `npm run typecheck`(`tsc -b`).
+
 ## 코드 컨벤션
 
 - Typescript strict mode
