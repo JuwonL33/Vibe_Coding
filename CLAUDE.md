@@ -107,7 +107,7 @@ npm run test:e2e:report                 # 마지막 HTML 리포트 열기
 - `src/app.ts` — Hono 앱 조립(라우트 마운트, 404/에러 핸들러). 테스트는 서버를 띄우지 않고 `app.request()`로 직접 호출한다.
 - `src/routes/*.ts` — 기능별 라우터(`/api/auth` 등). 입력은 `validateJson(zod스키마)` 미들웨어로 검증하고 `c.req.valid("json")`으로 꺼낸다.
 - `src/middleware/auth.ts` — `requireAuth`: `Authorization: Bearer <JWT>` 검증 후 `c.get("userId")` 제공. 보호할 라우터는 `new Hono<AuthEnv>()` + `.use("*", requireAuth)`. 사용자 소유 리소스는 항상 `userId` 조건을 함께 걸어 조회하고, 남의 리소스는 403이 아닌 404로 응답한다.
-- `src/db/` — Drizzle 스키마와 연결. `DATABASE_URL`이 없으면 Vitest 실행 중엔 `:memory:`, 그 외엔 `sqlite.db`를 쓴다. 테스트 파일마다 빈 메모리 DB에서 시작한다.
+- `src/db/` — Drizzle 스키마와 연결. `DATABASE_URL`이 없으면 Vitest 실행 중엔 `:memory:`, 그 외엔 `sqlite.db`를 쓴다. 테스트 파일마다 빈 메모리 DB에서 시작한다. DB 경로 규칙은 `src/db/path.ts`: `file:`/`sqlite:` 접두사 제거, 상대 경로는 cwd가 아닌 `backend/` 기준, 없는 폴더는 자동 생성.
 - `src/lib/errors.ts` — **모든 에러 응답은 `{ "error": string, "details"?: unknown }` 포맷**. 직접 `c.json({...}, 4xx)`를 만들지 말고 `errorResponse()`를 쓰거나 `HTTPException`을 던진다(`app.onError`가 변환).
 - 인증: bcryptjs(10 rounds)로 해싱, `hono/jwt`의 HS256 토큰(`sub`=userId, 7일 만료). 키는 `JWT_SECRET`(운영에서 미설정 시 시작 실패).
 

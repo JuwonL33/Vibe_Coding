@@ -1,13 +1,22 @@
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { resolveDatabasePath } from "./path";
 import * as schema from "./schema";
 
-// DB 파일 경로. DATABASE_URL이 없으면 Vitest 실행 중에는 메모리 DB를,
-// 그 외에는 backend/sqlite.db 파일을 사용한다.
-const databaseUrl =
-  process.env.DATABASE_URL ?? (process.env.VITEST ? ":memory:" : "sqlite.db");
+// DB 파일 경로. 규칙은 ./path.ts 참고 (기본: 테스트는 메모리 DB, 그 외는 backend/sqlite.db)
+const databaseUrl = resolveDatabasePath(process.env.DATABASE_URL, {
+  isTest: Boolean(process.env.VITEST),
+  baseDir: fileURLToPath(new URL("../..", import.meta.url)),
+});
+
+// 폴더가 없으면 better-sqlite3가 열지 못하므로 미리 만든다.
+if (databaseUrl !== ":memory:") {
+  mkdirSync(dirname(databaseUrl), { recursive: true });
+}
 
 export const sqlite = new Database(databaseUrl);
 
