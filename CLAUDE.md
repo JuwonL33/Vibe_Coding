@@ -42,7 +42,7 @@ React(Vite) 프론트엔드와 Hono 백엔드로 이루어진 풀스택 웹 애�
 ## 테스트
 
 - **Vitest** — `frontend/`, `backend/`의 단위/통합 테스트
-- **Playwright** — E2E 테스트(`e2e/`에 위치)
+- **Playwright** — E2E 테스트(`e2e/`에 위치, 의존성과 `playwright.config.ts`는 저장소 루트)
 
 ## 주요 명령어
 
@@ -88,12 +88,13 @@ npx vitest run           # 한 번만 실행 (CI용)
 npx vitest run path/to/file.test.ts   # 단일 파일
 npx vitest run -t "테스트 이름"        # 이름으로 단일 테스트
 
-# E2E 테스트 (e2e/ 에서)
-npx playwright install   # 최초 1회: 브라우저 설치
-npx playwright test                     # 전체
-npx playwright test tests/login.spec.ts # 단일 파일
+# E2E 테스트 (저장소 루트에서) — 설정: playwright.config.ts, 테스트: e2e/*.spec.ts
+npm install && npx playwright install chromium   # 최초 1회
+npm run test:e2e                        # 전체 (프론트엔드 dev 서버 :5173 자동 실행)
+npx playwright test e2e/home.spec.ts    # 단일 파일
 npx playwright test -g "테스트 이름"     # 이름으로 단일 테스트
-npx playwright test --ui                # UI 모드로 디버깅
+npm run test:e2e:ui                     # UI 모드로 디버깅
+npm run test:e2e:report                 # 마지막 HTML 리포트 열기
 ```
 
 실제 코드가 추가되면 이 섹션을 실제 스크립트에 맞게 갱신하고, 프론트엔드·백엔드·E2E가 어떻게 연결되는지(API 기본 URL, 포트, Playwright가 서비스를 어떻게 띄우는지 등)도 짧게 적어 주세요.
