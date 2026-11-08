@@ -5,6 +5,8 @@ import { errorResponse, handleError } from "./lib/errors";
 
 const app = new Hono();
 
+// 서버 기동 확인용(Playwright webServer 등)
+app.get("/api/health", (c) => c.json({ status: "ok" }));
 app.route("/api/auth", auth);
 app.route("/api/tasks", tasks);
 

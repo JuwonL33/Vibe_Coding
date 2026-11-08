@@ -1,8 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const isCI = !!process.env.CI
-const FRONTEND_PORT = 5173
+// 평소 개발 서버(프론트 5173 / 백엔드 3000)와 겹치지 않도록 E2E 전용 포트를 쓴다.
+const FRONTEND_PORT = 5174
+const BACKEND_PORT = 3001
 const FRONTEND_URL = `http://localhost:${FRONTEND_PORT}`
+const BACKEND_URL = `http://localhost:${BACKEND_PORT}`
 
 /**
  * E2E 테스트 설정. 테스트는 e2e/ 에 *.spec.ts 로 작성한다.
@@ -34,14 +37,24 @@ export default defineConfig({
     // { name: 'mobile', use: { ...devices['Pixel 7'] } },
   ],
 
-  // 테스트 전에 프론트엔드 개발 서버를 띄운다(이미 떠 있으면 로컬에서는 재사용).
-  // TODO: 백엔드 서버 진입점(backend/src/index.ts)이 생기면 여기에 백엔드 webServer도 추가한다.
+  // 테스트 전에 백엔드와 프론트엔드를 띄운다.
+  // 백엔드는 메모리 DB를 쓰므로 매 실행마다 빈 DB에서 시작한다(같은 이메일로 회원가입해도 충돌 없음).
+  // 그래서 이미 떠 있는 서버를 재사용하지 않는다(reuseExistingServer: false).
   webServer: [
+    {
+      command: 'npm run start',
+      cwd: './backend',
+      url: `${BACKEND_URL}/api/health`,
+      env: { PORT: String(BACKEND_PORT), DATABASE_URL: ':memory:' },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
     {
       command: `npm run dev -- --port ${FRONTEND_PORT} --strictPort`,
       cwd: './frontend',
       url: FRONTEND_URL,
-      reuseExistingServer: !isCI,
+      env: { API_PROXY_TARGET: BACKEND_URL },
+      reuseExistingServer: false,
       timeout: 60_000,
     },
   ],

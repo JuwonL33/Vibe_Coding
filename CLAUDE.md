@@ -61,7 +61,8 @@ npx vite preview         # 빌드 결과 미리보기
 
 ```bash
 npm install
-# 개발 서버: 런타임 미정 (Node: npx tsx watch src/index.ts / Bun: bun --hot src/index.ts)
+npm run dev               # tsx watch src/index.ts → http://localhost:3000 (PORT로 변경)
+npm run start             # 감시 없이 실행 (E2E가 사용)
 npm run db:generate      # schema.ts 변경 후 drizzle/ 에 마이그레이션 SQL 생성 (반드시 커밋)
 npm run db:studio        # DB 브라우저 GUI
 # 마이그레이션 적용은 별도 명령이 없다: src/db/index.ts가 import될 때 자동으로 migrate() 실행
@@ -90,7 +91,7 @@ npx vitest run -t "테스트 이름"        # 이름으로 단일 테스트
 
 # E2E 테스트 (저장소 루트에서) — 설정: playwright.config.ts, 테스트: e2e/*.spec.ts
 npm install && npx playwright install chromium   # 최초 1회
-npm run test:e2e                        # 전체 (프론트엔드 dev 서버 :5173 자동 실행)
+npm run test:e2e                        # 전체 (전용 포트로 백엔드 :3001(메모리 DB) + 프론트 :5174 자동 실행)
 npx playwright test e2e/home.spec.ts    # 단일 파일
 npx playwright test -g "테스트 이름"     # 이름으로 단일 테스트
 npm run test:e2e:ui                     # UI 모드로 디버깅
@@ -112,6 +113,8 @@ npm run test:e2e:report                 # 마지막 HTML 리포트 열기
 
 - 라우팅: `react-router`(v8). `src/App.tsx`가 `<Routes>`를 정의하고, `BrowserRouter`는 `src/main.tsx`에서 감싼다. 테스트에서는 `<MemoryRouter initialEntries={["/경로"]}><App /></MemoryRouter>`로 렌더링한다.
 - `src/pages/*Page.tsx` — 라우트 단위 페이지(`/`, `/login`, `/signup`, `*`=404). 페이지가 상태·API 호출을 담당하고, 폼 UI는 `src/components`에 둔다.
+- 인증/API: `src/lib/api.ts`가 유일한 fetch 지점(`/api` 접두사, Bearer 토큰, 에러 응답을 `ApiError`로 변환, 화면 문구는 `toErrorMessage(err, {상태코드: 문구})`). 토큰은 `src/auth/AuthProvider.tsx`가 localStorage(`taskflow.token`)에 저장하고, 컴포넌트는 `useAuth()`로 접근한다. 보호 페이지는 `<RequireAuth>`로 감싼다. 로그아웃은 `/logout` 라우트로 이동해서 처리한다(보호 영역 안에서 바로 토큰을 지우면 RequireAuth가 먼저 /login으로 보내기 때문).
+- 개발 시 Vite가 `/api`를 `API_PROXY_TARGET`(기본 `http://localhost:3000`)으로 프록시한다. 프론트와 백엔드를 각각 `npm run dev`로 띄운다.
 - `src/lib/validation.ts` — 이메일/비밀번호 검증 규칙(백엔드 Zod 스키마와 같은 기준). 폼마다 규칙을 따로 만들지 않는다.
 - `src/components/*.tsx` — 기능 컴포넌트(default export). 데이터 요청은 하지 않고 props 콜백(`onLogin` 등)으로 부모에 위임한다.
 - `src/components/ui/` — 공통 UI. **폼 입력은 `FormField`를 사용**한다(`useId`로 label `htmlFor`↔input `id` 자동 연결, 에러 시 `aria-invalid` + `aria-describedby` + 빨간 테두리). 폼 전체/서버 에러는 `FormAlert`(`role="alert"`)로 표시한다. 에러 표시를 컴포넌트마다 새로 만들지 않는다.

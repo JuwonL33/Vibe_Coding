@@ -15,23 +15,23 @@ type SignupProps = {
   isLoading?: boolean
 }
 
-type Values = SignupData & { passwordConfirm: string }
+type Values = SignupData & { confirmPassword: string }
 type FieldErrors = Partial<Record<keyof Values, string>>
 
-function validate({ email, password, passwordConfirm }: Values): FieldErrors {
+function validate({ email, password, confirmPassword }: Values): FieldErrors {
   return compactErrors({
     email: validateEmail(email),
     password: validatePassword(password),
-    passwordConfirm: !passwordConfirm
+    confirmPassword: !confirmPassword
       ? '비밀번호를 한 번 더 입력해 주세요.'
-      : passwordConfirm !== password
+      : confirmPassword !== password
         ? '비밀번호가 일치하지 않습니다.'
         : undefined,
   })
 }
 
 export default function Signup({ onSignup, error, isLoading = false }: SignupProps) {
-  const [values, setValues] = useState<Values>({ email: '', password: '', passwordConfirm: '' })
+  const [values, setValues] = useState<Values>({ email: '', password: '', confirmPassword: '' })
   const [errors, setErrors] = useState<FieldErrors>({})
 
   const handleChange = (field: keyof Values) => (value: string) => {
@@ -83,11 +83,11 @@ export default function Signup({ onSignup, error, isLoading = false }: SignupPro
       <FormField
         label="비밀번호 확인"
         type="password"
-        name="passwordConfirm"
+        name="confirmPassword"
         autoComplete="new-password"
-        value={values.passwordConfirm}
-        onChange={(e) => handleChange('passwordConfirm')(e.target.value)}
-        error={errors.passwordConfirm}
+        value={values.confirmPassword}
+        onChange={(e) => handleChange('confirmPassword')(e.target.value)}
+        error={errors.confirmPassword}
         disabled={isLoading}
       />
 

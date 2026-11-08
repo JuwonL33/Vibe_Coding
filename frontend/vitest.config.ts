@@ -16,6 +16,8 @@ export default mergeConfig(
       css: false,
       // 테스트 간 mock 상태가 섞이지 않도록 매 테스트 후 초기화
       restoreMocks: true,
+      // vi.stubGlobal('fetch', ...) 등 전역 대체도 매 테스트 후 원복
+      unstubGlobals: true,
     },
   }),
 )
